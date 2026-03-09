@@ -136,7 +136,3 @@ Dynamically adjusts bit-width based on the diffusion timestep:
 - See `requirements.txt` for full dependency list
 
 ---
-
-## 📜 License
-
-This project is for research purposes.
