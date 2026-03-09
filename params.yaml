@@ -1,0 +1,31 @@
+# Hyperparameters and configuration for the quantized diffusion pipeline
+# DVC tracks changes to this file to trigger re-runs of affected stages.
+
+seed: 42
+use_pretrained: true
+
+# Data
+image_size: 32
+channels: 3
+
+# Training (only used if use_pretrained: false)
+train_timesteps: 1000
+sampling_timesteps: 50
+batch_size: 32
+epochs: 500
+lr: 0.0001
+
+# Custom UNet architecture (ignored when pretrained)
+base_channels: 64
+channel_mults: [1, 2, 2, 4]
+num_res_blocks: 2
+
+# Quantization
+quant_layers: [mid, down, up, conv]
+ptq_calib_steps: 10
+qat_epochs: 20
+qat_lr: 0.00001
+
+# Evaluation
+fid_num_samples: 5000
+fid_batch_size: 64

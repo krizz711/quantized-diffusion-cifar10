@@ -1,0 +1,107 @@
+# DVC Pipeline for Quantized Diffusion Model Experiments
+# Run the full pipeline: dvc repro
+# Run a single stage:   dvc repro <stage_name>
+
+stages:
+  prepare_data:
+    cmd: python -m src.data
+    deps:
+      - src/data.py
+      - src/config.py
+      - params.yaml
+    params:
+      - image_size
+      - batch_size
+    outs:
+      - data/data_ready.flag
+
+  train_baseline:
+    cmd: python -m src.train
+    deps:
+      - src/train.py
+      - src/model.py
+      - src/config.py
+      - src/data.py
+      - data/data_ready.flag
+    params:
+      - use_pretrained
+      - train_timesteps
+      - sampling_timesteps
+      - batch_size
+      - epochs
+      - lr
+      - fid_num_samples
+      - fid_batch_size
+    outs:
+      - outputs/baseline_model.pth
+      - outputs/baseline_metrics.json
+
+  ptq:
+    cmd: python -m src.ptq
+    deps:
+      - src/ptq.py
+      - src/quantization.py
+      - src/train.py
+      - src/model.py
+      - src/config.py
+      - outputs/baseline_model.pth
+    params:
+      - quant_layers
+      - ptq_calib_steps
+      - fid_num_samples
+      - fid_batch_size
+    outs:
+      - outputs/ptq_results.json
+      - outputs/ptq_8bit.pth
+      - outputs/ptq_4bit.pth
+      - outputs/ptq_1bit.pth
+
+  qat:
+    cmd: python -m src.qat
+    deps:
+      - src/qat.py
+      - src/quantization.py
+      - src/train.py
+      - src/model.py
+      - src/config.py
+      - outputs/baseline_model.pth
+    params:
+      - quant_layers
+      - qat_epochs
+      - qat_lr
+      - fid_num_samples
+      - fid_batch_size
+    outs:
+      - outputs/qat_results.json
+      - outputs/qat_1bit.pth
+
+  timestep_aware:
+    cmd: python -m src.timestep_aware
+    deps:
+      - src/timestep_aware.py
+      - src/quantization.py
+      - src/train.py
+      - src/model.py
+      - src/config.py
+      - outputs/ptq_results.json
+      - outputs/ptq_8bit.pth
+      - outputs/ptq_4bit.pth
+      - outputs/ptq_1bit.pth
+    params:
+      - quant_layers
+      - fid_num_samples
+      - fid_batch_size
+    outs:
+      - outputs/timestep_aware_results.json
+      - outputs/timestep_aware_results.csv
+
+  evaluate:
+    cmd: python -m src.evaluate
+    deps:
+      - src/evaluate.py
+      - outputs/baseline_metrics.json
+      - outputs/ptq_results.json
+      - outputs/qat_results.json
+      - outputs/timestep_aware_results.json
+    outs:
+      - outputs/quantization_final_results.csv

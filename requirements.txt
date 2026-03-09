@@ -1,0 +1,19 @@
+# Core ML
+torch
+torchvision
+diffusers
+accelerate
+
+# Evaluation
+clean-fid
+torchmetrics
+
+# Utilities
+tqdm
+matplotlib
+pandas
+numpy
+pyyaml
+
+# Pipeline
+dvc
